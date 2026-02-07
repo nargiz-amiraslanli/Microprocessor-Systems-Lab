@@ -1,0 +1,41 @@
+// 1.1 arduino method 
+
+const int ledPin = 13;
+
+void setup() {
+  // set pin 13 as output
+  pinMode(ledPin, OUTPUT);
+}
+
+void loop() {
+  // turn led on
+  digitalWrite(ledPin, HIGH);
+  delay(500);              // wait 500 ms
+
+  // turn led off
+  digitalWrite(ledPin, LOW);
+  delay(500);              // wait 500 ms
+}
+// 500 ms on + 500 ms off = 1 second  1 Hz
+
+
+
+
+// 2.1 register-level method 
+
+#include <avr/io.h>
+
+void setup() {
+  // set PB5 (pin 13) as output
+  DDRB |= (1 << DDB5);
+}
+
+void loop() {
+  // set PB5 HIGH -> LED ON
+  PORTB |= (1 << PB5); 
+  delay(500);              // wait 500 ms
+
+  // set PB5 LOW -> LED OFF
+  PORTB &= ~(1 << PB5); 0000 0000
+  delay(500);              // wait 500 ms
+}
