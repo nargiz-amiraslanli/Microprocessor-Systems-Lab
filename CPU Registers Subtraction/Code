@@ -1,0 +1,43 @@
+#include <Arduino.h>
+
+uint8_t result;
+uint8_t sreg_snapshot;
+
+void setup() {
+  Serial.begin(9600);
+  while (!Serial);
+
+  uint8_t a = 10;   // First number
+  uint8_t b = 20;   // Second number (larger to force underflow)
+
+  asm volatile (
+    "ldi r16, %[valA]     \n\t"  // Load A into R16
+    "ldi r17, %[valB]     \n\t"  // Load B into R17
+    "sub r16, r17         \n\t"  // R16 = R16 - R17
+    "in  r18, __SREG__    \n\t"  // Copy SREG into R18
+    "sts %[res], r16      \n\t"  // Store result
+    "sts %[sreg], r18     \n\t"  // Store SREG snapshot
+    :
+    : [valA] "M" (a),
+      [valB] "M" (b),
+      [res]  "m" (result),
+      [sreg] "m" (sreg_snapshot)
+    : "r16", "r17", "r18"
+  );
+
+  Serial.println("=== CPU Register Subtraction ===");
+  Serial.print("R16 (Result): ");
+  Serial.println(result);
+
+  Serial.print("SREG: 0b");
+  Serial.println(sreg_snapshot, BIN);
+
+  Serial.print("Zero Flag (Z): ");
+  Serial.println((sreg_snapshot & (1 << 1)) ? "SET" : "CLEARED");
+
+  Serial.print("Carry Flag (C): ");
+  Serial.println((sreg_snapshot & (1 << 0)) ? "SET" : "CLEARED");
+}
+
+void loop() {
+}
