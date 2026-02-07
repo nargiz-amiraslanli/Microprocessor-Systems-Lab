@@ -1,0 +1,24 @@
+# Arduino LED Blink: Arduino API vs Register-Level Control
+
+This project compares two methods of blinking the Arduino onboard LED (pin 13):
+
+1. Using Arduino's high-level functions (`pinMode`, `digitalWrite`)
+2. Using direct AVR register-level manipulation (`DDRB`, `PORTB`)
+
+## Objective
+- Blink the onboard LED at 1 Hz using both methods
+- Compare execution time and memory overhead
+- Observe behavior when blinking as fast as possible
+
+## Key Observations
+- Both methods successfully blink the LED at 1 Hz
+- Register-level control executes faster due to direct hardware access
+- When delays are removed, register-level blinking reaches a much higher frequency
+- High-level Arduino functions introduce overhead due to abstraction layers
+
+## Hardware
+- Arduino Uno
+- Onboard LED (Pin 13 / PB5)
+
+## Notes
+This project demonstrates the trade-off between code readability and execution efficiency in embedded systems.
