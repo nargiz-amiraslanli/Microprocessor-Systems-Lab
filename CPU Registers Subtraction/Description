@@ -1,0 +1,52 @@
+CPU Register-Level Subtraction & SREG Flag Analysis (AVR / Arduino)
+
+
+
+What this project demonstrates:
+
+- Unsigned subtraction performed directly using AVR CPU registers
+
+- Use of inline assembly instead of Arduino arithmetic functions
+
+- Inspection of the Status Register (SREG) after an arithmetic operation
+
+
+
+
+How it works:
+
+Two unsigned 8-bit values are loaded into CPU registers (R16 and R17) and subtracted using the SUB instruction. The result remains in a CPU register, while the Status Register (SREG) is captured immediately after the operation to preserve the state of the processor flags. Both the result and the SREG snapshot are then copied into memory and output via the serial interface.
+
+This example intentionally forces an unsigned underflow (10 − 20) to demonstrate how the AVR represents underflow using modular arithmetic and how the Carry (C) and Zero (Z) flags behave during subtraction. The serial output provides clear, observable evidence of the wrapped result and the corresponding flag states.
+
+
+
+
+What it shows:
+
+- Demonstrates unsigned underflow using modular arithmetic (10 − 20 → 246)
+
+- Shows how the Carry flag (C) is set when a borrow occurs during subtraction
+
+- Shows how the Zero flag (Z) reflects whether the result is zero
+
+- Provides observable evidence of CPU flag behavior through serial output
+
+
+
+
+Why this matters:
+
+- Helps understand how the AVR handles arithmetic at the hardware level
+
+- Highlights behavior hidden by Arduino’s high-level abstractions
+
+- Useful for learning embedded systems, CPU architecture, and low-level debugging
+
+
+
+Hardware:
+
+- Arduino Uno (or any AVR-based Arduino)
+
+- Serial Monitor (9600 baud)
