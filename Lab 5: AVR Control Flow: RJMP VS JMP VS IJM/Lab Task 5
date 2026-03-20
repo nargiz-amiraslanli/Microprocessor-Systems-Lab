@@ -1,0 +1,59 @@
+TASK 5
+AVR CONTROL FLOW LAB: RJMP VS JMP VS IJMP ON ARDUINO UNO (ATMEGA328P)
+
+Hardware: Arduino Uno (ATmega328P) | LED: Built-in LED on D13 (PB5) | Button: D8 (PB0) to GND (use internal pull-up)
+Objective: Build one firmware that behaves like a simple “one-button LED gadget” and demonstrates three different jump styles:
+• RJMP: tight local polling loop at boot
+• JMP: hard jump into one of three modes (Mode A/B/C)
+• IJMP: runtime dispatch to one of several “actions” inside the selected mode
+Final behaviour: On power-up, the device waits for the first button press, then confirms with a short LED flash. During the next 2 seconds, the
+number of presses selects a mode:
+• 1 press = Mode A (slow blink)
+• 2 presses = Mode B (double blink)
+• 3 presses = Mode C (fast strobe)
+While running in a mode, each short press cycles an “action” (0..3). The action is executed using a jump table and IJMP.
+Phase requirements:
+• Phase 1 (RJMP): Implement the boot wait loop in assembly using a label, a bit-test (SBIC or SBIS), and rjmp back to the label while the button is not
+pressed.
+• Phase 2 (JMP): After counting presses, enter the chosen mode by using an explicit jmp modeX_entry. The mode entry functions run forever and do not
+return.
+• Phase 3 (IJMP): Inside the mode loop, implement action dispatch by loading a handler address into Z (r31:r30) and executing ijmp. Each handler must
+jump back to the mode loop (since IJMP does not push a return address).
+
+TASK 5A
+On power-up, the arduino must do nothing until the user presses
+the button. Implement the waiting loop as a tiny assembly loop
+that checks the button bit and uses RJMP to jump back to the
+same label while the button is not pressed. When the press
+happens, the loop falls through and the LED turns on for 200 ms
+to confirm “start detected”.
+Deliverable: show the LED does not start until a press, and show
+rjmp in the disassembly.
+
+TASK 5B
+After the first press, the arduino must choose one of three modes based
+on how many button presses happen within the next 2 seconds:
+• 1 press = Mode A (slow blink)
+• 2 presses = Mode B (double blink)
+• 3 presses = Mode C (fast strobe)
+Once the choice is made, the firmware must commit to that mode by
+using JMP to jump to modeA_entry, modeB_entry, or modeC_entry. Each
+mode runs forever and does not “return” to the chooser.
+Deliverable: show you can pick a mode by pressing 1, 2, or 3 times, and
+show jmp modeX_entry in the disassembly.
+
+TASK 5C
+While running inside any mode, the arduino must respond to short button presses by cycling
+through a small set of actions, for example:
+• Action 0: LED pattern normal
+• Action 1: LED pattern inverted (on becomes off)
+• Action 2: LED brightness simulation (short on-time, long off-time)
+• Action 3: reset action state back to 0
+Implement this “action selection” using a jump table: the current action index selects a
+handler address, you load it into Z (r31:r30), and you execute IJMP to jump to that handler.
+Each handler does its small behaviour update, then jumps back to the mode loop (because
+IJMP is a jump, not a call).
+Deliverable: show button presses cycle actions, and show ijmp in the disassembly.
+
+
+By Professor DR ALEXZ FARRALL
