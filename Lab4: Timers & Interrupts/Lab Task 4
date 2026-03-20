@@ -1,0 +1,32 @@
+TASK 4
+
+Build an interrupt-driven system where pressing a button
+connected to D2 turns an output pin ON for exactly 10
+milliseconds and then turns it OFF automatically.
+Configure Timer1 to generate an interrupt every 1 millisecond,
+and use this interrupt to control a 10 ms countdown (i.e., interrupt
+would trigger 10 times).
+Configure the external interrupt on D2 so that when the button is
+pressed, it immediately sets the output pin HIGH and starts the
+countdown. Each 1 ms timer interrupt should reduce the
+countdown value, and when it reaches zero, the output pin must
+be set LOW.
+
+The main loop must remain empty, and all behaviour must be
+handled using direct AVR register configuration without Arduino
+helper functions. You must calculate how to achieve the 1 ms
+timer interval, predict the 10 ms pulse width, measure the actual
+pulse using an oscilloscope, and compare the measured result with
+your calculated expectation.
+
+TASK 4: DELIVERABLES
+• Detect a button press using an external interrupt.
+• Immediately set a chosen output pin HIGH when the button is
+pressed.
+• Keep the output pin HIGH for exactly 10 milliseconds.
+• Automatically set the output pin LOW after 10 milliseconds
+without using delay functions.
+• Use a timer interrupt running at 1 ms intervals to control the
+pulse timing.
+• Operate fully through interrupts, with the main loop doing
+nothing.
