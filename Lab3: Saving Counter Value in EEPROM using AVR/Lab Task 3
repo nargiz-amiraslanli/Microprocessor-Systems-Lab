@@ -1,4 +1,6 @@
-Task 3: Using AVR language, implement a counter that increments
+Task 3:
+
+Using AVR language, implement a counter that increments
 a single register by 1 every 1 second. Identify the number of CPU
 cycles and instructions that that place within this window for your
 code. Implement a serial command that allows you to store or
