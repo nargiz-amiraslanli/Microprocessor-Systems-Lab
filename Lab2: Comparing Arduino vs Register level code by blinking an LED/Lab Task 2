@@ -1,4 +1,6 @@
-Task 2: Create a serial interface for subtracting two numbers using
+Task 2:
+
+Create a serial interface for subtracting two numbers using
 CPU registers only, store the result in a register, and output all
 register values.
 You must then examine the SREG status register and clearly
