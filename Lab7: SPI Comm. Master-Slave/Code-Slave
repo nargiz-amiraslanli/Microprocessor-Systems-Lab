@@ -1,0 +1,79 @@
+#include <avr/io.h>
+#include <stdio.h>
+
+//Function to configure UART speed and format
+void UART_Init(unsigned int ubrr) {
+
+    // Set baud rate (9600 → ubrr = 103 for 16MHz)
+    UBRR0H = (unsigned char)(ubrr >> 8); //Store upper 8 bits of baud rate
+    UBRR0L = (unsigned char)ubrr; //Store lower 8 bits
+
+    // Enable receiver and transmitter
+    UCSR0B = (1 << RXEN0) | (1 << TXEN0);
+
+    // Set frame format: 8 data bits, 1 stop bit
+    UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
+}
+
+// Send one character
+void UART_Transmit(char data) {
+
+    // Wait until transmit buffer is empty
+    while (!(UCSR0A & (1 << UDRE0)));
+
+    // Send data
+    UDR0 = data;
+}
+
+// Print a number to Serial Monitor
+void UART_PrintNumber(uint8_t num) {
+
+    char buffer[4];  // max "255\0"
+
+    // Convert number to string, example 85 → "85\n"
+    sprintf(buffer, "%d\n", num);
+
+    // Send each character
+    for (int i = 0; buffer[i] != '\0'; i++) {
+        UART_Transmit(buffer[i]);
+    }
+}
+
+// Initialize SPI as Slave
+void SPI_SlaveInit(void) {
+
+    // Set MISO (PB4) as OUTPUT
+    DDRB |= (1 << PB4);
+
+    // Set SS (PB2) as INPUT (correct way)
+    DDRB &= ~(1 << PB2);
+
+    // Enable SPI (Slave mode by default)
+    SPCR = (1 << SPE);
+}
+
+// Receive one byte via SPI
+uint8_t SPI_SlaveReceive(void) {
+
+    // Wait until data is received
+    while (!(SPSR & (1 << SPIF)));
+
+    // Return received data
+    return SPDR;
+}
+
+int main(void) {
+
+    // Initialize SPI and UART
+    SPI_SlaveInit();
+    UART_Init(103);
+
+    while (1) {
+
+        // Wait for data from Master
+        uint8_t data = SPI_SlaveReceive();
+
+        // Print received value
+        UART_PrintNumber(data);
+    }
+}
