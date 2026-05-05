@@ -1,0 +1,12 @@
+Display
+COM -> GND
+a -> rezistor -> D8
+b -> rezistor -> D9
+c -> rezistor -> D10
+d -> rezistor -> D11
+e -> rezistor -> D12
+f -> rezistor -> D13
+g -> rezistor -> A0
+Button
+bir ayaq -> D2
+bir ayaq -> GND
