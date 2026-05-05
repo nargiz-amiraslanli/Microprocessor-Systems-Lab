@@ -1,0 +1,19 @@
+TASK 7
+Your goal is to use two ATmega328P Arduinos to demonstrate basic SPI
+communication at the register level. One Arduino must act as the Master and
+the other as the Slave. The Master must send a single decimal value (0–255)
+once every second through SPI, and the Slave must correctly receive that value
+and display it on the Serial Monitor. You must configure all SPI settings using
+the SPCR, SPSR, SPDR, DDRB, and PORTB registers only.
+The Master must transmit a sequence of three specific decimal values every
+second in the following order:
+85 → 170 → 255
+repeat
+
+Evidence how can you show what is happening with SS,
+SCK, and MOSI
+Draw a timing diagram for one of the decimal values
+showing how the digital signals (SS, SCLK, MOSI, MISO)
+change over time.
+
+By Professor Alexz Farral
