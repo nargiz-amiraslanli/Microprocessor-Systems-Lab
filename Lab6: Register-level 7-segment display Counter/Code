@@ -1,0 +1,99 @@
+#define F_CPU 16000000UL   // CPU frequency = 16 MHz
+
+#include <avr/io.h>
+#include <avr/interrupt.h>
+
+// Global variables (used in interrupts → must be volatile)
+volatile uint8_t digit = 0;   // current digit (0–9)
+volatile uint8_t paused = 0;  // 0 = running, 1 = paused
+
+// 7-segment encoding (common cathode)
+// bit0=a, bit1=b, ..., bit6=g
+const uint8_t seg[10] = {
+    0x3F, // 0
+    0x06, // 1
+    0x5B, // 2
+    0x4F, // 3
+    0x66, // 4
+    0x6D, // 5
+    0x7D, // 6
+    0x07, // 7
+    0x7F, // 8
+    0x6F  // 9
+};
+
+// Function to display a digit
+static inline void show_digit(uint8_t n) {
+    uint8_t x = seg[n];
+
+    // Send segments a–f to PB0–PB5 (D8–D13)
+    PORTB = (PORTB & ~0x3F) | (x & 0x3F);
+
+    // Send segment g to PC0 (A0)
+    PORTC = (PORTC & ~0x01) | ((x >> 6) & 1);
+}
+
+// Timer1 interrupt (fires every 0.5 seconds)
+ISR(TIMER1_COMPA_vect) {
+
+    // 🔬 Toggle PD3 (D3) → creates square wave for oscilloscope
+    PORTD ^= (1 << PD3);
+
+    // Increment digit
+    digit = (digit + 1) % 10;
+
+    // Update display
+    show_digit(digit);
+}
+
+// Button interrupt (INT0 on D2)
+ISR(INT0_vect) {
+
+    paused ^= 1; // toggle pause state
+
+    if (paused) {
+        // 🛑 STOP timer (no clock source)
+        TCCR1B &= ~((1 << CS12) | (1 << CS11) | (1 << CS10));
+    } else {
+        // ▶️ RESTART timer (CTC mode + prescaler 256)
+        TCCR1B |= (1 << WGM12) | (1 << CS12);
+    }
+}
+
+int main(void) {
+
+    // --- Configure 7-segment outputs ---
+    DDRB |= 0x3F;           // D8–D13 (PB0–PB5) → output
+    DDRC |= (1 << PC0);     // A0 (PC0) → output
+
+    // --- Configure PD3 (D3) for oscilloscope ---
+    DDRD |= (1 << PD3);     // D3 as output
+
+    // --- Configure button (D2 / PD2) ---
+    DDRD &= ~(1 << PD2);    // input
+    PORTD |= (1 << PD2);    // enable pull-up resistor
+
+    DDRD |=(1<<PD7);
+    PORTD |= (1<<PD7);
+
+    // Display initial digit
+    show_digit(digit);
+
+    // --- Timer1 setup (CTC mode, 0.5 s) ---
+    TCCR1A = 0;
+    TCCR1B = (1 << WGM12) | (1<< CS12); // CTC + prescaler 256
+
+    OCR1A  = 31249; // 0.5 s interval
+
+    TIMSK1 = (1 << OCIE1A); // enable timer interrupt
+
+    // --- External interrupt setup (button) ---
+    EICRA = (1 << ISC01);   // falling edge trigger
+    EIMSK = (1 << INT0);    // enable INT0
+
+    sei(); // enable global interrupts
+
+    while (1) {
+        // main loop does nothing
+    }
+}
