@@ -1,0 +1,14 @@
+TASK 6
+Using register-level programming and parallel I/O, configure the
+microcontroller’s hardware timer to drive a single-digit 7-segment
+display. The display should count from 0 to 9, updating once every
+0.5 seconds. A push button connected to an external interrupt
+should pause the counter when pressed and resume it when
+pressed again. After the display reaches 9, it resets.
+Questions to think about:
+- How can you be confident that it is counting in precise 0.5-second
+increments? How did you calculate this?
+- Does the counter resume
+exactly where it left off?
+
+By Professor Alexz Farrall
