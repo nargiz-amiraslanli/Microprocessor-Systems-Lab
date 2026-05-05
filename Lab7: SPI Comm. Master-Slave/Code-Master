@@ -1,0 +1,58 @@
+#include <avr/io.h>
+#include <util/delay.h>
+
+// Function to initialize SPI as Master
+void SPI_MasterInit(void) {
+
+    // Set MOSI (PB3), SCK (PB5), SS (PB2) as OUTPUT
+    DDRB |= (1 << PB3) | (1 << PB5) | (1 << PB2);
+
+    // SPI Control Register (SPCR):
+    // SPE  = 1 → Enable SPI
+    // MSTR = 1 → Set as Master
+    // SPR0 = 1 → Clock = F_CPU / 16 (1 MHz if F_CPU = 16 MHz)
+    SPCR = (1 << SPE) | (1 << MSTR) | (1 << SPR0);
+
+    // Set SS HIGH → no communication yet
+    PORTB |= (1 << PB2);
+}
+
+// Function to send one byte via SPI
+void SPI_MasterTransmit(uint8_t data) {
+
+    // Pull SS LOW → start communication
+    PORTB &= ~(1 << PB2);
+
+    // Load data into SPI Data Register
+    // This automatically starts transmission
+    SPDR = data;
+
+    // Wait until transmission complete
+    // SPIF flag becomes 1 when done
+    while (!(SPSR & (1 << SPIF)));
+
+    // Set SS HIGH → end communication
+    PORTB |= (1 << PB2);
+}
+
+int main(void) {
+
+    // Initialize SPI
+    SPI_MasterInit();
+
+    // Values to send
+    uint8_t values[3] = {85, 170, 255};
+
+    while (1) {
+
+        // Loop through values
+        for (int i = 0; i < 3; i++) {
+
+            // Send one value
+            SPI_MasterTransmit(values[i]);
+
+            // Wait 1 second
+            _delay_ms(1000);
+        }
+    }
+}
