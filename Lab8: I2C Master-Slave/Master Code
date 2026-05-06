@@ -1,0 +1,158 @@
+#include <util/delay.h>   // for delay functions
+#include <avr/io.h>       // for register definitions
+
+#define F_CPU 16000000UL  // CPU frequency = 16 MHz
+#define SLA 8             // Slave address (must match slave)
+
+
+// -------------------- TWI INIT --------------------
+void TWI_init() {
+
+    PRR &= ~(1 << PRTWI);
+    // Power Reduction Register:
+    // clear PRTWI bit → enable TWI (I2C module)
+
+    TWSR = 0x00;
+    // TWI Status Register:
+    // prescaler bits = 00 → prescaler = 1
+
+    TWBR = 12;
+    // TWI Bit Rate Register:
+    // sets clock speed
+    // 16MHz / (16 + 2*72) ≈ 100kHz
+
+    // TWBR = 12;
+    // would give ~400kHz (faster I2C)
+
+    TWCR = (1 << TWEN);
+    // TWI Control Register:
+    // TWEN = enable TWI hardware
+}
+
+
+// -------------------- START CONDITION --------------------
+void TWI_start() {
+
+    TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
+    // TWINT = clear interrupt flag (start operation)
+    // TWSTA = send START condition
+    // TWEN = keep TWI enabled
+
+    while (!(TWCR & (1 << TWINT)));
+    // wait until START condition is sent
+}
+
+
+// -------------------- STOP CONDITION --------------------
+void TWI_stop() {
+
+    TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN);
+    // TWSTO = send STOP condition
+}
+
+
+// -------------------- WRITE BYTE --------------------
+void TWI_write(uint8_t data) {
+
+    TWDR = data;
+    // load data into TWI Data Register
+
+    TWCR = (1 << TWINT) | (1 << TWEN);
+    // start transmission
+
+    while (!(TWCR & (1 << TWINT)));
+    // wait until transmission finishes
+}
+
+
+// -------------------- READ LAST BYTE --------------------
+uint8_t TWI_read_last_byte() {
+
+    TWCR = (1 << TWINT) | (1 << TWEN);
+    // read byte WITHOUT sending ACK (NACK)
+    // used when this is the last byte
+
+    while (!(TWCR & (1 << TWINT)));
+    // wait until data received
+
+    return TWDR;
+    // return received data
+}
+
+
+// -------------------- SETUP --------------------
+void setup() {
+
+    DDRD &= ~(1 << PD2);
+    // PD2 (D2) as INPUT → button
+
+    PORTD |= (1 << PD2);
+    // enable internal pull-up resistor
+    // so default = HIGH, pressed = LOW
+
+    DDRB |= (1 << PB0);
+    // PB0 (D8) as OUTPUT → LED
+
+    TWI_init();
+    // initialize I2C
+}
+
+
+// -------------------- MAIN LOOP --------------------
+void loop() {
+
+    uint8_t state = !(PIND & (1 << PD2));
+    // read button:
+    // PIND reads pin values
+    // invert (!) because pull-up logic:
+    // pressed → LOW → becomes 1
+
+    // ---------- MASTER WRITES TO SLAVE ----------
+    TWI_start();
+
+    if ((TWSR & 0xF8) != 0x08) return;
+    // 0x08 = START sent successfully
+
+    TWI_write((SLA << 1) | 0);
+    // send slave address + WRITE bit (0)
+
+    if ((TWSR & 0xF8) != 0x18) return;
+    // 0x18 = address sent + ACK received
+
+    TWI_write(state);
+    // send button state (0 or 1)
+
+    if ((TWSR & 0xF8) != 0x28) return;
+    // 0x28 = data sent + ACK received
+
+
+    // ---------- MASTER READS FROM SLAVE ----------
+    TWI_start();
+
+    if ((TWSR & 0xF8) != 0x10) return;
+    // 0x10 = repeated START sent
+
+    TWI_write((SLA << 1) | 1);
+    // send slave address + READ bit (1)
+
+    if ((TWSR & 0xF8) != 0x40) return;
+    // 0x40 = address sent + ACK received
+
+    uint8_t received = TWI_read_last_byte();
+    // read slave button state
+
+    TWI_stop();
+    // end communication
+
+
+    // ---------- CONTROL LED ----------
+    if (received)
+        PORTB |= (1 << PB0);   // LED ON
+    else
+        PORTB &= ~(1 << PB0);  // LED OFF
+
+    _delay_ms(50);
+    // small delay to stabilize system
+
+    //Serial.println(millis());
+}
