@@ -1,0 +1,21 @@
+TASK 8
+Set up two Arduino boards communicating via I2C (one master, one
+slave), each with a push button and LED; pressing Button A should send
+a message to Board B to light its LED, and pressing Button B should
+send its state back to Board A to light its LED.
+Explain your message protocol design in your report. Then, explore how
+clock speed affects the I2C signals by modifying the TWI clock registers
+(TWBR and prescaler bits in TWSR) to test at least two different speeds.
+Use an oscilloscope to observe the SDA and SCL waveforms at each
+speed and document the timing characteristics (bit period, rise/fall
+times, signal quality, and any ringing or noise).
+
+Discuss how speed changes affect the observed waveforms, any
+timing violations or signal degradation you encounter, and the
+practical limits of increasing clock speed on your specific hardware
+setup
+→ include oscilloscope screenshots and explain what constraints
+(capacitance, trace length, pull-up resistors, or device slew rates)
+are likely responsible for any limitations you observe.
+
+By professor DR ALEXZ FARRALL
