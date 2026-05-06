@@ -1,0 +1,99 @@
+#include <avr/io.h>
+#include <avr/interrupt.h>  // needed for ISR
+
+#define SLA 8   // slave address (must match master)
+
+volatile uint8_t received = 0;
+// shared variable (updated in interrupt)
+
+
+// -------------------- SLAVE INIT --------------------
+void TWI_slave_init(uint8_t address) {
+
+    PRR &= ~(1 << PRTWI);
+    // enable TWI hardware
+
+    TWAR = (address << 1);
+    // TWI Address Register:
+    // store slave address (shifted left)
+
+    TWCR = (1 << TWEN) | (1 << TWEA) | (1 << TWIE);
+    // TWEN = enable TWI
+    // TWEA = enable ACK (auto acknowledge)
+    // TWIE = enable interrupt
+
+    sei();
+    // enable global interrupts
+}
+
+
+// -------------------- TWI INTERRUPT --------------------
+ISR(TWI_vect) {
+
+  switch (TWSR & 0xF8) {
+  // mask with 0xF8 to get only status code
+
+      // ---------- MASTER WRITES TO SLAVE ----------
+      case 0x80:
+          // 0x80 = data received + ACK returned
+
+          received = TWDR;
+          // read received data (button state)
+
+          TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWEA) | (1 << TWIE);
+          // clear flag + prepare for next data
+          break;
+
+
+      // ---------- MASTER READS FROM SLAVE ----------
+      case 0xA8:
+      {
+          // 0xA8 = slave addressed for READ
+
+          uint8_t state = !(PIND & (1 << PD2));
+          // read slave button
+
+          TWDR = state;
+          // load data to send to master
+
+          TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWEA) | (1 << TWIE);
+          // send data and continue
+          break;
+      }
+
+
+      // ---------- DEFAULT CASE ----------
+      default:
+          // handle all other states safely
+
+          TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWEA) | (1 << TWIE);
+          // reset and wait for next event
+  }
+}
+
+
+// -------------------- SETUP --------------------
+void setup() {
+
+  DDRD &= ~(1 << PD2);
+  // PD2 as INPUT → button
+
+  PORTD |= (1 << PD2);
+  // enable pull-up resistor
+
+  DDRB |= (1 << PB0);
+  // PB0 as OUTPUT → LED
+
+  TWI_slave_init(SLA);
+  // initialize slave
+}
+
+
+// -------------------- MAIN LOOP --------------------
+void loop() {
+
+  if (received)
+      PORTB |= (1 << PB0);   // LED ON
+  else
+      PORTB &= ~(1 << PB0);  // LED OFF
+}
